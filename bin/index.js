@@ -1,3 +1,3 @@
-const main = require('../src/index')
+const PageLoader = require('../src/index')
 
-main();
+PageLoader.main();
