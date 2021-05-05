@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "[![Actions Status](https://github.com/williamsiii/frontent-testing-react-project-lvl1/workflows/hexlet-check/badge.svg)](https://github.com/williamsiii/frontent-testing-react-project-lvl1/actions)",
   "main": "bin/index.js",
+  "testEnvironment": "node",
   "scripts": {
     "test": "jest"
   },
@@ -10,19 +11,16 @@
     "type": "git",
     "url": "git+https://github.com/williamsiii/frontent-testing-react-project-lvl1.git"
   },
-  "author": "",
+  "author": "NosovAS",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/williamsiii/frontent-testing-react-project-lvl1/issues"
-  },
-  "homepage": "https://github.com/williamsiii/frontent-testing-react-project-lvl1#readme",
   "devDependencies": {
     "babel": "^6.23.0",
-    "babel-jest": "^26.6.3"
-  },
-  "dependencies": {
-    "axios": "^0.21.1",
+    "babel-jest": "^26.6.3",
+    "fast-check": "^2.14.0",
     "jest": "^26.6.3",
     "nock": "^13.0.11"
+  },
+  "dependencies": {
+    "axios": "^0.21.1"
   }
 }
