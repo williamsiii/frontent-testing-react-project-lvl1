@@ -1,7 +1,7 @@
 const axios = require('axios');
 const fs = require("fs");
+const { program } = require('commander');
 
-// const defaultUrl = 'https://ru.hexlet.io/courses';
 const defaultUrl = 'https://example.com/';
 const INIT_STATE = {
     output: null,
@@ -11,37 +11,22 @@ const INIT_STATE = {
 }
 let params = { ...INIT_STATE }
 
-const processArgs = () => {
-    const args = process.argv;
-    let outputChecked = false;
-    let urlChecked = false;
-    for (let i = 0; i < args.length; i++) {
-        if (!outputChecked && (args[i] === "--output" || args[i] === "-o")) {
-            if (args[i + 1] && fs.existsSync(args[i + 1])) {
-                params.output = args[i + 1];
-            } else {
-                console.log("Destination directory doesn't exist. Downloading page to current directory.")
-                params.output = process.cwd();
-            }
-            outputChecked = true;
-        }
-        if (!urlChecked && (args[i] === "--url" || args[i] === "-u")) {
-            if (args[i + 1]) {
-                params.url = args[i + 1]
-            } else {
-                params.url = defaultUrl;
-            }
-            urlChecked = true;
-        }
-    }
+const getOptions = () => {
+    program
+        .option('-o, --output <dirname>', 'Set output directory', process.cwd())
+        .option('-u, --url <url>', 'Set page address for downloading', 'https://example.com/')
 
-    if (params.output === null) {
-        params.output = process.cwd();
+    program.parse();
+    params.output = program.opts().output;
+    if (params.output[params.output.length - 1] !== '/') {
+        params.output += '/';
     }
-
-    console.log(`File will be downloaded to ${params.output}`);
+    if (!fs.existsSync(params.output)) {
+        params.output = process.cwd() + '/';
+    }
+    outputChecked = true;
+    params.url = program.opts().url;
 }
-
 
 const fetchPage = async () => {
     let resp;
@@ -79,7 +64,8 @@ const savePage = async () => {
 }
 
 async function main() {
-    processArgs();
+    getOptions();
+    // processArgs();
     await fetchPage();
     composeName();
     savePage();
@@ -87,4 +73,4 @@ async function main() {
 }
 
 
-module.exports = { main, params, defaultUrl, INIT_STATE, processArgs, composeName, savePage, fetchPage }
+module.exports = { main, params, defaultUrl, INIT_STATE, getOptions, composeName, savePage, fetchPage }

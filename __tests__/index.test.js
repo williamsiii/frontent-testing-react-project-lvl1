@@ -15,30 +15,30 @@ describe('page-loader', () => {
     })
 
     test('download folder, default', () => {
-        PageLoader.processArgs();
-        expect(PageLoader.params.output).toEqual(process.cwd())
+        PageLoader.getOptions();
+        expect(PageLoader.params.output).toEqual(process.cwd() + '/')
     })
 
     test('download folder, home directory', () => {
         process.argv.push('--output', os.homedir())
-        PageLoader.processArgs();
+        PageLoader.getOptions();
         expect(PageLoader.params.output).toEqual(os.homedir() + '/')
     })
 
     test('download folder, wrong folder', () => {
         process.argv.push('--output', '/var/spoon/bar/tron/mud/jizz')
-        PageLoader.processArgs();
-        expect(PageLoader.params.output).toEqual(process.cwd())
+        PageLoader.getOptions();
+        expect(PageLoader.params.output).toEqual(process.cwd() + '/')
     })
 
     test('url, default', () => {
-        PageLoader.processArgs();
+        PageLoader.getOptions();
         expect(PageLoader.params.url).toEqual(PageLoader.defaultUrl)
     })
 
     test('url, argument', () => {
         process.argv.push('-u', 'https://yandex.ru')
-        PageLoader.processArgs();
+        PageLoader.getOptions();
         expect(PageLoader.params.url).toEqual('https://yandex.ru')
     })
 
