@@ -29,6 +29,7 @@ describe('page-loader, parse response', () => {
         PageLoader.params.resourcesDir = null;
         PageLoader.params.resources = [];
         PageLoader.params.resourcesFileNames = [];
+        PageLoader.params.originalResources = [];
         process.argv = process.argv.slice(0, 2)
     })
 
@@ -55,6 +56,7 @@ describe('page-loader, parse response', () => {
         PageLoader.params.response = null;
         PageLoader.params.resources = [];
         PageLoader.params.resourcesFileNames = [];
+        PageLoader.params.originalResources = [];
         fs.rm(PageLoader.params.resourcesDir, { recursive: true, force: true }, () => { })
     })
 })

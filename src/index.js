@@ -12,6 +12,7 @@ const INIT_STATE = {
     response: null,
     resources: [],
     resourcesFileNames: [],
+    originalResources: [],
     resourcesDir: null,
 }
 let params = { ...INIT_STATE }
@@ -39,6 +40,7 @@ const composeName = (name, withExtension = false) => {
     let res;
     if (withExtension) {
         let parts = name.split('.');
+        res = name;
         if (parts.length > 1) {
             extension = "." + parts.pop();
             res = parts.join('.')
@@ -69,32 +71,32 @@ const fetchPage = async () => {
 }
 
 const parsePage = async () => {
+    // create dir if not existed
     params.resourcesDir = `${params.output}${params.fileName}_files`
-    if (await !fs.existsSync(params.resourcesDir)) {
-        await fs.mkdir(params.resourcesDir, (err) => {
+    if (!fs.existsSync(params.resourcesDir)) {
+        fs.mkdir(params.resourcesDir, (err) => {
             if (err) throw err;
         })
     }
-    //
+    // find resources
     const $ = cheerio.load(params.response);
     let coreDomain = params.url.replace(/^(http|https):\/\//, '')
-    let imgs = [];
     $('img').each((index, element) => {
         let src = $(element).attr('src');
         if (src) {
-            src = src
+            let res = src
                 .replace(/^(http|https):\/\//, '')  // сначала убираю протокол
                 .replace(coreDomain, '///')         // теперь убираю основной домен, заменяя его спецпоследовательностью
-                .replace(/^.*\/\/\//, '/')        // теперь убираю все верхние домены, если есть спецпоследовательность
+                .replace(/^.*\/\/\//, '/')          // теперь убираю все верхние домены, если есть спецпоследовательность
                 .replace(/\/{2,}/g, '/')            // заменяю все последовательности '/.../' на одинарный '/'
-            let matching = src.match(/^\//)
-            if (matching) {
-                imgs.push(src)
+
+            if (res.match(/^\//)) {
+                params.resources.push(res)
+                params.originalResources.push(src)
             }
         }
     })
-    params.resources = params.resources.concat(imgs)
-    //
+    // save resources
     for (i in params.resources) {
         let targetFileName = composeName(params.resources[i], true);
         let targetFilePath = `${params.resourcesDir}/${targetFileName}`;
@@ -104,8 +106,17 @@ const parsePage = async () => {
             targetFile.write(chunk);
         });
         params.resourcesFileNames.push(targetFilePath)
-    }
 
+    }
+    // change sources
+    $(`img`).each((index, element) => {
+        let src = $(element).attr('src');
+        let q = params.originalResources.indexOf(src)
+        if (q >= 0) {
+            $(element).attr('src', params.resourcesFileNames[q]);
+        }
+    })
+    params.response = $.html();
 }
 
 const savePage = async () => {
