@@ -5,6 +5,20 @@
 const PageLoader = require('../src/index');
 const fc = require('fast-check');
 const nock = require('nock');
+require('axios-debug-log')({
+    request: function (debug, config) {
+        debug('Request with ' + config.headers['content-type'])
+    },
+    response: function (debug, response) {
+        debug(
+            'Response with ' + response.headers['content-type'],
+            'from ' + response.config.url
+        )
+    },
+    error: function (debug, error) {
+        debug('Axios Error', error)
+    }
+})
 
 describe('page-loader, fetch', () => {
     beforeEach(() => {

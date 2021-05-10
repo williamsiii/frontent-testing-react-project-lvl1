@@ -22,17 +22,23 @@ const getOptions = () => {
         .option('-o, --output <dirname>', 'Set output directory', INIT_STATE.output)
         .option('-u, --url <url>', 'Set page address for downloading', defaultUrl)
 
-    program.parse();
-    params.output = program.opts().output;
-    if (params.output[params.output.length - 1] !== '/') {
-        params.output += '/';
+    try {
+
+        program.parse();
+        params.output = program.opts().output;
+        if (params.output[params.output.length - 1] !== '/') {
+            params.output += '/';
+        }
+        if (!fs.existsSync(params.output)) {
+            params.output = INIT_STATE.output;
+        }
+        outputChecked = true;
+        params.url = program.opts().url;
+        params.fileName = composeName(params.url);
+    } catch (err) {
+        console.error("Не смог обработать входные параметры:", err)
+        process.exit(1)
     }
-    if (!fs.existsSync(params.output)) {
-        params.output = INIT_STATE.output;
-    }
-    outputChecked = true;
-    params.url = program.opts().url;
-    params.fileName = composeName(params.url);
 }
 
 const composeName = (name, withExtension = false) => {
@@ -59,32 +65,31 @@ const fetchPage = async () => {
     try {
         resp = await axios.get(params.url)
     } catch (err) {
-        return Error(err)
+        console.error("Не получилось сказать страницу:", err)
+        process.exit(3)
     }
 
     if (resp && resp.status === 200) {
         params.response = resp.data
     } else {
         params.response = null
-        return Error('Could not fetch page.')
+        console.error('Не получилось скачать страницу')
+        process.exit(4)
     }
 }
 
-const parsePage = async () => {
-    // create dir if not existed
-    params.resourcesDir = `${params.output}${params.fileName}_files`
-    if (!fs.existsSync(params.resourcesDir)) {
-        fs.mkdir(params.resourcesDir, (err) => {
-            if (err) throw err;
-        })
-    }
-    // find resources
+const parseForElement = async (element, attr, condition) => {
+    checkSaveDirectory();
     const $ = cheerio.load(params.response);
-    let coreDomain = params.url.replace(/^(http|https):\/\//, '')
-    $('img').each((index, element) => {
-        let src = $(element).attr('src');
-        if (src) {
-            let res = src
+    const coreDomain = params.url.replace(/^(http|https):\/\//, '')
+    $(element).each((index, el) => {
+        let attrib = $(el).attr(attr);
+        // проверка на доп условия
+        if (condition && condition($, el)) {
+            return;
+        }
+        if (attrib) {
+            let res = attrib
                 .replace(/^(http|https):\/\//, '')  // сначала убираю протокол
                 .replace(coreDomain, '///')         // теперь убираю основной домен, заменяя его спецпоследовательностью
                 .replace(/^.*\/\/\//, '/')          // теперь убираю все верхние домены, если есть спецпоследовательность
@@ -92,14 +97,14 @@ const parsePage = async () => {
 
             if (res.match(/^\//)) {
                 params.resources.push(res)
-                params.originalResources.push(src)
+                params.originalResources.push(attrib)
             }
         }
     })
     // save resources
     for (i in params.resources) {
-        let targetFileName = composeName(params.resources[i], true);
-        let targetFilePath = `${params.resourcesDir}/${targetFileName}`;
+        const targetFileName = composeName(params.resources[i], true);
+        const targetFilePath = `${params.resourcesDir}/${targetFileName}`;
         const targetFile = fs.createWriteStream(targetFilePath);
         const remoteFile = request(`${params.url}${params.resources[i]}`);
         remoteFile.on('data', function (chunk) {
@@ -109,14 +114,47 @@ const parsePage = async () => {
 
     }
     // change sources
-    $(`img`).each((index, element) => {
-        let src = $(element).attr('src');
+    $(element).each((index, el) => {
+        let src = $(el).attr(attr);
         let q = params.originalResources.indexOf(src)
         if (q >= 0) {
-            $(element).attr('src', params.resourcesFileNames[q]);
+            $(el).attr(attr, params.resourcesFileNames[q]);
         }
     })
     params.response = $.html();
+}
+const linkCondition = ($, el) => {
+    return $(el).attr('rel') !== 'stylesheet';
+}
+
+const checkSaveDirectory = () => {
+    // create dir if not exists
+    try {
+        params.resourcesDir = `${params.output}${params.fileName}_files`
+        if (!fs.existsSync(params.resourcesDir)) {
+            fs.mkdir(params.resourcesDir, (err) => {
+                if (err) {
+                    console.error("Не получилось создать директорию", err);
+                    process.exit(5);
+                }
+            })
+        }
+    } catch (err) {
+        console.error("Не получилось создать директорию", err);
+        process.exit(5);
+    }
+
+}
+const parsePage = async () => {
+    try {
+        parseForElement('img', 'src');
+        parseForElement('link', 'href', linkCondition);
+        parseForElement('script', 'src');
+    } catch (err) {
+        console.error("Не получилось распарсить документ", err)
+        process.exit(6);
+    }
+
 }
 
 const savePage = async () => {
@@ -132,12 +170,27 @@ async function main() {
     getOptions();
     await fetchPage();
     //
-    if (!params.response) return;
+    if (!params.response) {
+        console.error("Нет данных для обработки")
+        process.exit(2);
+    }
     //
     parsePage();
     savePage();
-
+    process.exit(0);
 }
 
 
-module.exports = { main, params, defaultUrl, INIT_STATE, getOptions, composeName, savePage, fetchPage, parsePage }
+module.exports = {
+    main,
+    params,
+    defaultUrl,
+    INIT_STATE,
+    getOptions,
+    composeName,
+    savePage,
+    fetchPage,
+    parsePage,
+    parseForElement,
+    linkCondition,
+}
