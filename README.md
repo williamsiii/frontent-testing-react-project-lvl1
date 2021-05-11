@@ -8,3 +8,12 @@ Options:
   -o, --output <dirname>  Set output directory (default: "/Users/a.nosov/hexlet/test_download/")
   -u, --url <url>         Set page address for downloading (default: "https://yandex.ru/")
   -h, --help              display help for command
+
+
+
+  asciinemas:
+
+  ввод параметров:
+  https://asciinema.org/a/Ggc3sLcLsclvXyPj0PXC2BYLe
+
+  

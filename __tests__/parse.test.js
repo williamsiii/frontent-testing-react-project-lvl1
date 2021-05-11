@@ -1,5 +1,10 @@
+/**
+ * @jest-environment node
+ */
 const PageLoader = require('../src/index');
 const fs = require('fs');
+const nock = require('nock');
+const { setTimeout } = require('timers');
 
 const fixture1 = `<!DOCTYPE html>
 <html lang="ru">
@@ -39,6 +44,7 @@ const fixture2 = `<!DOCTYPE html>
 </html>`
 
 describe('page-loader, parse response', () => {
+  let scope1, scope2, scope3;
   beforeEach(() => {
     PageLoader.params.response = null;
     PageLoader.params.url = 'https://hexlet.io';
@@ -48,6 +54,17 @@ describe('page-loader, parse response', () => {
     PageLoader.params.resourcesFileNames = [];
     PageLoader.params.originalResources = [];
     process.argv = process.argv.slice(0, 2)
+    scope1 = nock('https://hexlet.io')
+      .get(/.*/)
+      .reply(200, 'some bytes')
+    scope2 = nock('https://ru.hexlet.io')
+      .get(/.*/)
+      .reply(200, 'some bytes')
+    scope3 = nock('https://cdn2.hexlet.io')
+      .get(/.*/)
+      .reply(200, 'some bytes')
+
+
   })
 
   test('parse img, default', async () => {
@@ -94,8 +111,9 @@ describe('page-loader, parse response', () => {
   })
 
   test('saved files', async () => {
-    PageLoader.params.response = fixture1;
+    PageLoader.params.response = fixture2;
     await PageLoader.parsePage();
+    await PageLoader.savePage();
     PageLoader.params.resourcesFileNames.map(file => {
       expect(fs.existsSync(file)).toBe(true)
     })
@@ -106,6 +124,9 @@ describe('page-loader, parse response', () => {
     PageLoader.params.resources = [];
     PageLoader.params.resourcesFileNames = [];
     PageLoader.params.originalResources = [];
-    fs.rm(PageLoader.params.resourcesDir, { recursive: true, force: true }, () => { })
+    // fs.rm(PageLoader.params.resourcesDir, { recursive: true, force: true }, () => { })
+    scope1.done();
+    scope2.done();
+    scope3.done();
   })
 })

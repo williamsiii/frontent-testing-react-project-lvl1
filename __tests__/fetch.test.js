@@ -5,6 +5,7 @@
 const PageLoader = require('../src/index');
 const fc = require('fast-check');
 const nock = require('nock');
+
 require('axios-debug-log')({
     request: function (debug, config) {
         debug('Request with ' + config.headers['content-type'])
@@ -19,6 +20,7 @@ require('axios-debug-log')({
         debug('Axios Error', error)
     }
 })
+
 
 describe('page-loader, fetch', () => {
     beforeEach(() => {
@@ -49,13 +51,4 @@ describe('page-loader, fetch', () => {
         scope.done();
     })
 
-    test('fetch page failed', async () => {
-        PageLoader.params.url = 'https://example.com/';
-        const scope = nock('https://example.com')
-            .get('/')
-            .reply(400)
-        await PageLoader.fetchPage()
-        expect(PageLoader.params.response).toBeNull()
-        scope.done();
-    })
 })

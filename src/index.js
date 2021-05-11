@@ -2,7 +2,21 @@ const axios = require('axios');
 const fs = require("fs");
 const { program } = require('commander');
 const cheerio = require('cheerio');
-var request = require('request');
+require('axios-debug-log')({
+    request: function (debug, config) {
+        debug('Request with ' + config.headers['content-type'])
+    },
+    response: function (debug, response) {
+        debug(
+            'Response with ' + response.headers['content-type'],
+            'from ' + response.config.url,
+            'response:' + response.data
+        )
+    },
+    error: function (debug, error) {
+        debug('Axios Error', error)
+    }
+})
 
 const defaultUrl = 'http://www.tsjdom18.ru';
 const INIT_STATE = {
@@ -17,13 +31,31 @@ const INIT_STATE = {
 }
 let params = { ...INIT_STATE }
 
+const ERROR_CODES = {
+    BAD_INPUT: 1,
+    NO_DATA: 2,
+    COULD_NOT_FETCH: 3,
+    CANT_PARSE_DOC: 4,
+    CANT_MKDIR: 5,
+    CANT_WRITE: 6
+}
+
+const linkCondition = ($, el) => {
+    return $(el).attr('rel') !== 'stylesheet';
+}
+
+const RESOURCES = [
+    { tag: 'img', attr: 'src' },
+    { tag: 'link', attr: 'href', condition: linkCondition },
+    { tag: 'script', attr: 'src' }
+];
+
 const getOptions = () => {
     program
         .option('-o, --output <dirname>', 'Set output directory', INIT_STATE.output)
         .option('-u, --url <url>', 'Set page address for downloading', defaultUrl)
 
     try {
-
         program.parse();
         params.output = program.opts().output;
         if (params.output[params.output.length - 1] !== '/') {
@@ -37,7 +69,7 @@ const getOptions = () => {
         params.fileName = composeName(params.url);
     } catch (err) {
         console.error("Не смог обработать входные параметры:", err)
-        process.exit(1)
+        process.exit(ERROR_CODES.BAD_INPUT)
     }
 }
 
@@ -45,8 +77,9 @@ const composeName = (name, withExtension = false) => {
     let extension = "";
     let res;
     if (withExtension) {
-        let parts = name.split('.');
-        res = name;
+        const queryParts = name.split('?');
+        const parts = queryParts[0].split('.');
+        res = queryParts[0];
         if (parts.length > 1) {
             extension = "." + parts.pop();
             res = parts.join('.')
@@ -65,8 +98,8 @@ const fetchPage = async () => {
     try {
         resp = await axios.get(params.url)
     } catch (err) {
-        console.error("Не получилось сказать страницу:", err)
-        process.exit(3)
+        console.error("Не получилось скачать страницу:", err)
+        process.exit(ERROR_CODES.COULD_NOT_FETCH)
     }
 
     if (resp && resp.status === 200) {
@@ -74,57 +107,71 @@ const fetchPage = async () => {
     } else {
         params.response = null
         console.error('Не получилось скачать страницу')
-        process.exit(4)
+        process.exit(ERROR_CODES.COULD_NOT_FETCH)
     }
+}
+const changeSource = () => {
+    const $ = cheerio.load(params.response);
+    RESOURCES.map(resource => {
+        $(resource.tag).each((index, res) => {
+            const src = $(res).attr(resource.attr);
+            const q = params.originalResources.indexOf(src)
+            if (q !== -1) {
+                $(res).attr(resource.attr, params.resourcesFileNames[q]);
+            }
+        })
+    })
+    params.response = $.html();
 }
 
 const parseForElement = async (element, attr, condition) => {
     checkSaveDirectory();
     const $ = cheerio.load(params.response);
     const coreDomain = params.url.replace(/^(http|https):\/\//, '')
+    let arr = [], origArr = [];
     $(element).each((index, el) => {
-        let attrib = $(el).attr(attr);
+        const originalAttr = $(el).attr(attr);
+
         // проверка на доп условия
-        if (condition && condition($, el)) {
+        if (!originalAttr || (condition && condition($, el))) {
             return;
         }
+        const attrib = originalAttr.split('?')[0]
         if (attrib) {
-            let res = attrib
+            const res = attrib
                 .replace(/^(http|https):\/\//, '')  // сначала убираю протокол
                 .replace(coreDomain, '///')         // теперь убираю основной домен, заменяя его спецпоследовательностью
                 .replace(/^.*\/\/\//, '/')          // теперь убираю все верхние домены, если есть спецпоследовательность
                 .replace(/\/{2,}/g, '/')            // заменяю все последовательности '/.../' на одинарный '/'
 
             if (res.match(/^\//)) {
-                params.resources.push(res)
-                params.originalResources.push(attrib)
+                arr.push(res);
+                if (originalAttr[0] === "/") {
+                    origArr.push(`${params.url}${originalAttr}`)
+                } else {
+                    origArr.push(originalAttr);
+                }
             }
         }
     })
+    params.resources = params.resources.concat(arr)
+    params.originalResources = params.originalResources.concat(origArr)
     // save resources
-    for (i in params.resources) {
-        const targetFileName = composeName(params.resources[i], true);
+    for (const item of arr) {
+        const targetFileName = composeName(item, true);
         const targetFilePath = `${params.resourcesDir}/${targetFileName}`;
-        const targetFile = fs.createWriteStream(targetFilePath);
-        const remoteFile = request(`${params.url}${params.resources[i]}`);
-        remoteFile.on('data', function (chunk) {
-            targetFile.write(chunk);
+        axios({
+            method: 'get',
+            url: origArr[arr.indexOf(item)],
+            responseType: 'stream'
+        }).then(function (response) {
+            response.data.pipe(fs.createWriteStream(targetFilePath))
+        }).catch(err => {
+            console.error(origArr[arr.indexOf(item)], "Status " + err.response.status)
         });
-        params.resourcesFileNames.push(targetFilePath)
 
+        params.resourcesFileNames.push(targetFilePath)
     }
-    // change sources
-    $(element).each((index, el) => {
-        let src = $(el).attr(attr);
-        let q = params.originalResources.indexOf(src)
-        if (q >= 0) {
-            $(el).attr(attr, params.resourcesFileNames[q]);
-        }
-    })
-    params.response = $.html();
-}
-const linkCondition = ($, el) => {
-    return $(el).attr('rel') !== 'stylesheet';
 }
 
 const checkSaveDirectory = () => {
@@ -135,24 +182,25 @@ const checkSaveDirectory = () => {
             fs.mkdir(params.resourcesDir, (err) => {
                 if (err) {
                     console.error("Не получилось создать директорию", err);
-                    process.exit(5);
+                    process.exit(ERROR_CODES.CANT_MKDIR);
                 }
             })
         }
     } catch (err) {
         console.error("Не получилось создать директорию", err);
-        process.exit(5);
+        process.exit(ERROR_CODES.CANT_MKDIR);
     }
 
 }
 const parsePage = async () => {
     try {
-        parseForElement('img', 'src');
-        parseForElement('link', 'href', linkCondition);
-        parseForElement('script', 'src');
+        await RESOURCES.map(async (res) => {
+            await parseForElement(res.tag, res.attr, res.condition);
+        })
+        changeSource();
     } catch (err) {
         console.error("Не получилось распарсить документ", err)
-        process.exit(6);
+        process.exit(ERROR_CODES.CANT_PARSE_DOC);
     }
 
 }
@@ -162,8 +210,14 @@ const savePage = async () => {
         params.output += '/'
     }
     const file = `${params.output}${params.fileName}.html`;
-    fs.writeFileSync(file, params.response)
-    console.log(`File was saved as ${file}`)
+    try {
+
+        fs.writeFileSync(file, params.response)
+    } catch (err) {
+        console.error(err)
+        process.exit(ERROR_CODES.CANT_WRITE)
+    }
+    console.log(`Файл был сохранён как ${file}`)
 }
 
 async function main() {
@@ -172,12 +226,12 @@ async function main() {
     //
     if (!params.response) {
         console.error("Нет данных для обработки")
-        process.exit(2);
+        process.exit(ERROR_CODES.NO_DATA);
+        return;
     }
     //
     parsePage();
     savePage();
-    process.exit(0);
 }
 
 
@@ -186,6 +240,7 @@ module.exports = {
     params,
     defaultUrl,
     INIT_STATE,
+    ERROR_CODES,
     getOptions,
     composeName,
     savePage,
