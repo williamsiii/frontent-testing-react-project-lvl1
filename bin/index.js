@@ -1,3 +1,4 @@
-const PageLoader = require('../src/index')
+#!/usr/bin/env node
+import PageLoader from '../src/index.js';
 
-PageLoader.main();
+PageLoader();

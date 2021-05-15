@@ -1,21 +1,24 @@
-const PageLoader = require('../src/index');
+import { PageLoader } from '../src/index';
 const os = require('os');
 
 describe('page-loader, setup', () => {
-    beforeEach(() => {
-        PageLoader.params.output = PageLoader.INIT_STATE.output;
-        process.argv = process.argv.slice(0, 2)
+    beforeAll(() => {
+        PageLoader.initOptions();
     })
 
-    test('download folder, default', () => {
+    beforeEach(() => {
+        PageLoader.params.output = PageLoader.INIT_STATE.output;
+    })
+
+    test('download folder, default', async () => {
         const origin = PageLoader.params.output;
-        PageLoader.getOptions();
+        await PageLoader.getOptions();
         expect(PageLoader.params.output).toEqual(origin)
     })
 
-    test('download folder, home directory', () => {
+    test('download folder, home directory', async () => {
         process.argv.push('--output', os.homedir())
-        PageLoader.getOptions();
+        await PageLoader.getOptions();
         expect(PageLoader.params.output).toEqual(os.homedir() + '/')
     })
 
@@ -26,16 +29,15 @@ describe('page-loader, setup', () => {
         expect(PageLoader.params.output).toEqual(origin)
     })
 
-    test('url, default', () => {
-        PageLoader.getOptions();
+    test('url, default', async () => {
+        await PageLoader.getOptions();
         expect(PageLoader.params.url).toEqual(PageLoader.defaultUrl)
     })
 
-    test('url, argument', () => {
+    test('url, argument', async () => {
         process.argv.push('-u', 'https://yandex.ru')
-        PageLoader.getOptions();
+        await PageLoader.getOptions();
         expect(PageLoader.params.url).toEqual('https://yandex.ru')
     })
-
 
 })

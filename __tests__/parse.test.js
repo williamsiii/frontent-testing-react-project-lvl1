@@ -1,10 +1,9 @@
 /**
  * @jest-environment node
  */
-const PageLoader = require('../src/index');
+import { PageLoader } from '../src/index';
 const fs = require('fs');
 const nock = require('nock');
-const { setTimeout } = require('timers');
 
 const fixture1 = `<!DOCTYPE html>
 <html lang="ru">

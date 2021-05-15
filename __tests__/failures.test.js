@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-const PageLoader = require('../src/index');
+import { PageLoader } from '../src/index';
 const nock = require('nock');
 
 describe('page-loader, failures', () => {
