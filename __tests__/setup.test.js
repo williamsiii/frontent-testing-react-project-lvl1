@@ -1,5 +1,5 @@
 import { PageLoader } from '../src/index';
-const os = require('os');
+import os from 'os';
 
 describe('page-loader, setup', () => {
     beforeAll(() => {

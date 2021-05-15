@@ -50,19 +50,16 @@ const RESOURCES = [
     { tag: 'link', attr: 'href', condition: linkCondition },
     { tag: 'script', attr: 'src' }
 ];
-
 const initOptions = () => {
     program
-        .option('-o, --output <dirname>', 'Set output directory', INIT_STATE.output)
-        .option('-u, --url <url>', 'Set page address for downloading', defaultUrl)
         .allowUnknownOption()
+        .option('-o, --output <dirname>', 'Set output directory', PageLoader.INIT_STATE.output)
+        .option('-u, --url <url>', 'Set page address for downloading', PageLoader.defaultUrl)
 }
 
 const getOptions = async () => {
-
-
     try {
-        await program.parseAsync();
+        await program.parseAsync()
         params.url = String(program.opts().url);
         params.output = String(program.opts().output);
         if (params.output[params.output.length - 1] !== '/') {
@@ -74,7 +71,7 @@ const getOptions = async () => {
         params.fileName = composeName(params.url);
     } catch (err) {
         console.error("Не смог обработать входные параметры:", err)
-        process.exit(ERROR_CODES.BAD_INPUT)
+        process.exit()
     }
 }
 
@@ -104,7 +101,7 @@ const fetchPage = async () => {
         resp = await axios.get(params.url)
     } catch (err) {
         console.error("Не получилось скачать страницу:", err.code)
-        process.exit(ERROR_CODES.COULD_NOT_FETCH)
+        process.exit()
     }
 
     if (resp && resp.status === 200) {
@@ -112,7 +109,7 @@ const fetchPage = async () => {
     } else {
         params.response = null
         console.error('Не получилось скачать страницу')
-        process.exit(ERROR_CODES.COULD_NOT_FETCH)
+        process.exit()
     }
 }
 const changeSource = () => {
@@ -188,13 +185,13 @@ const checkSaveDirectory = () => {
             fs.mkdir(params.resourcesDir, (err) => {
                 if (err) {
                     console.error("Не получилось создать директорию", err);
-                    process.exit(ERROR_CODES.CANT_MKDIR);
+                    process.exit();
                 }
             })
         }
     } catch (err) {
         console.error("Не получилось создать директорию", err);
-        process.exit(ERROR_CODES.CANT_MKDIR);
+        process.exit();
     }
 
 }
@@ -206,7 +203,7 @@ const parsePage = async () => {
         changeSource();
     } catch (err) {
         console.error("Не получилось распарсить документ", err)
-        process.exit(ERROR_CODES.CANT_PARSE_DOC);
+        process.exit();
     }
 
 }
@@ -220,19 +217,18 @@ const savePage = async () => {
         fs.writeFileSync(file, params.response)
     } catch (err) {
         console.error(err)
-        process.exit(ERROR_CODES.CANT_WRITE)
+        process.exit()
     }
     console.log(`Файл был сохранён как ${file}`)
 }
 
-async const main = () => {
+const main = async () => {
     initOptions();
     getOptions();
     await fetchPage();
     //
     if (!params.response) {
         console.error("Нет данных для обработки")
-        process.exit(ERROR_CODES.NO_DATA);
         return;
     }
     //

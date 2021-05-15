@@ -1,8 +1,5 @@
-/**
- * @jest-environment node
- */
 import { PageLoader } from '../src/index';
-const nock = require('nock');
+import nock from 'nock';
 
 describe('page-loader, failures', () => {
 
@@ -13,7 +10,7 @@ describe('page-loader, failures', () => {
             .reply(400)
         const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => { });
         await PageLoader.fetchPage();
-        expect(mockExit).toHaveBeenCalledWith(PageLoader.ERROR_CODES.COULD_NOT_FETCH);
+        expect(mockExit).toHaveBeenCalled();
         scope.done();
     })
 })

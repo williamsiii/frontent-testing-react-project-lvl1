@@ -1,4 +1,5 @@
 #!/usr/bin/env node
-import PageLoader from '../src/index.js';
 
-PageLoader();
+import Util from '../src/index.js';
+
+export default Util

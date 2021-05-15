@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import { PageLoader } from '../src/index';
 const fc = require('fast-check');
 const nock = require('nock');

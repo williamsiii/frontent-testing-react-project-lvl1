@@ -1,9 +1,6 @@
-/**
- * @jest-environment node
- */
 import { PageLoader } from '../src/index';
-const fs = require('fs');
-const nock = require('nock');
+import fs from 'fs';
+import nock from 'nock';
 
 const fixture1 = `<!DOCTYPE html>
 <html lang="ru">
