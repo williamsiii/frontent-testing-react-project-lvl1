@@ -2,4 +2,4 @@
 
 import Util from '../src/index.js';
 
-export default Util
+export default Util;

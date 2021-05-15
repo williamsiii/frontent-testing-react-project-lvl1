@@ -1,6 +1,6 @@
-import { PageLoader } from '../src/index';
 import fs from 'fs';
 import nock from 'nock';
+import { PageLoader } from '../src/index';
 
 const fixture1 = `<!DOCTYPE html>
 <html lang="ru">
@@ -17,8 +17,7 @@ const fixture1 = `<!DOCTYPE html>
       <a href="/professions/nodejs">Node.js-программист</a>
     </h3>
   </body>
-</html>`
-
+</html>`;
 
 const fixture2 = `<!DOCTYPE html>
 <html lang="ru">
@@ -37,10 +36,12 @@ const fixture2 = `<!DOCTYPE html>
     <script src="https://js.stripe.com/v3/"></script>
     <script src="https://ru.hexlet.io/packs/js/runtime.js"></script>
   </body>
-</html>`
+</html>`;
 
 describe('page-loader, parse response', () => {
-  let scope1, scope2, scope3;
+  let scope1;
+  let scope2;
+  let scope3;
   beforeEach(() => {
     PageLoader.params.response = null;
     PageLoader.params.url = 'https://hexlet.io';
@@ -49,50 +50,50 @@ describe('page-loader, parse response', () => {
     PageLoader.params.resources = [];
     PageLoader.params.resourcesFileNames = [];
     PageLoader.params.originalResources = [];
-    process.argv = process.argv.slice(0, 2)
+    process.argv = process.argv.slice(0, 2);
     scope1 = nock('https://hexlet.io')
       .get(/.*/)
-      .reply(200, 'some bytes')
+      .reply(200, 'some bytes');
     scope2 = nock('https://ru.hexlet.io')
       .get(/.*/)
-      .reply(200, 'some bytes')
+      .reply(200, 'some bytes');
     scope3 = nock('https://cdn2.hexlet.io')
       .get(/.*/)
-      .reply(200, 'some bytes')
-
-
-  })
+      .reply(200, 'some bytes');
+  });
 
   test('parse img, default', async () => {
     PageLoader.params.response = fixture1;
     await PageLoader.parseForElement('img', 'src');
     expect(PageLoader.params.resources).toEqual(
       [
-        "/assets/professions/nodejs.png",
+        '/assets/professions/nodejs.png',
         '/courses/assets/professions/nodejs1.png',
-        "/assets/logos/funbox-3903337b3475d9698c0e77b5ad46720d8c0e4b94d17f6aa7d7fa19b40e39a356.svg"
-      ])
-  })
+        '/assets/logos/funbox-3903337b3475d9698c0e77b5ad46720d8c0e4b94d17f6aa7d7fa19b40e39a356.svg',
+      ],
+    );
+  });
 
   test('parse links, default', async () => {
     PageLoader.params.response = fixture2;
     await PageLoader.parseForElement('link', 'href', PageLoader.linkCondition);
     expect(PageLoader.params.resources).toEqual(
       [
-        "/assets/menu.css",
+        '/assets/menu.css',
         '/assets/application.css',
-      ])
-  })
+      ],
+    );
+  });
 
   test('parse scripts, default', async () => {
     PageLoader.params.response = fixture2;
     await PageLoader.parseForElement('script', 'src');
     expect(PageLoader.params.resources).toEqual(
       [
-        "/packs/js/runtime.js"
-      ])
-  })
-
+        '/packs/js/runtime.js',
+      ],
+    );
+  });
 
   test('parse all', async () => {
     PageLoader.params.response = fixture2;
@@ -100,29 +101,30 @@ describe('page-loader, parse response', () => {
     expect(PageLoader.params.resources).toEqual(
       [
         '/assets/professions/nodejs.png',
-        "/assets/menu.css",
+        '/assets/menu.css',
         '/assets/application.css',
-        "/packs/js/runtime.js"
-      ])
-  })
+        '/packs/js/runtime.js',
+      ],
+    );
+  });
 
   test('saved files', async () => {
     PageLoader.params.response = fixture2;
     await PageLoader.parsePage();
     await PageLoader.savePage();
-    PageLoader.params.resourcesFileNames.map(file => {
-      expect(fs.existsSync(file)).toBe(true)
-    })
-  })
+    PageLoader.params.resourcesFileNames.forEach((file) => {
+      expect(fs.existsSync(file)).toBe(true);
+    });
+  });
 
   afterAll(() => {
     PageLoader.params.response = null;
     PageLoader.params.resources = [];
     PageLoader.params.resourcesFileNames = [];
     PageLoader.params.originalResources = [];
-    // fs.rm(PageLoader.params.resourcesDir, { recursive: true, force: true }, () => { })
+    fs.rm(PageLoader.params.resourcesDir, { recursive: true, force: true }, () => { });
     scope1.done();
     scope2.done();
     scope3.done();
-  })
-})
+  });
+});
