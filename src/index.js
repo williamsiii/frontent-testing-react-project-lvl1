@@ -174,7 +174,7 @@ const parseForElement = async (element, attr, condition) => {
       const resp = await axios({
         method: 'get',
         url: origArr[index],
-        responseType: 'stream';
+        responseType: 'stream',
       });
       resp.data.pipe(fs.createWriteStream(filesArr[index]));
     } catch (err) {
