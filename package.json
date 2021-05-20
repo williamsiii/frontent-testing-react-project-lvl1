@@ -7,7 +7,9 @@
   },
   "main": "bin/index.js",
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "coverageDirectory": "./coverage/",
+    "collectCoverage": true
   },
   "engines": {
     "node": ">=14"
@@ -16,7 +18,8 @@
   "scripts": {
     "test": "jest --colors --runInBand --bail",
     "testAxios": "export DEBUG=axios && jest",
-    "testNock": "export DEBUG=nock.* && jest"
+    "testNock": "export DEBUG=nock.* && jest",
+    "report-coverage": "codecov"
   },
   "repository": {
     "type": "git",

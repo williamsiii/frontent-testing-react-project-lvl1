@@ -16,13 +16,13 @@ Options:
 asciinemas:
 
 ввод параметров:
-https://asciinema.org/a/Ggc3sLcLsclvXyPj0PXC2BYLe
+[![asciicast](https://asciinema.org/a/JJHxbXDbZifHmNFG1gQbGlyuk.svg)](https://asciinema.org/a/Ggc3sLcLsclvXyPj0PXC2BYLe)
 
 пример работы утилиты:
-https://asciinema.org/a/Z9jNvEFedF5eIt4ofUpo64PuY
+[![asciicast](https://asciinema.org/a/JJHxbXDbZifHmNFG1gQbGlyuk.svg)](https://asciinema.org/a/Z9jNvEFedF5eIt4ofUpo64PuY)
 
 пример работы тестов:
-https://asciinema.org/a/EqNRUkM39u3IjLnC5NPagfyhM
+[![asciicast](https://asciinema.org/a/JJHxbXDbZifHmNFG1gQbGlyuk.svg)](https://asciinema.org/a/EqNRUkM39u3IjLnC5NPagfyhM)
 
 пример с ошибкой (нет сети, нет доступа к папке):
-https://asciinema.org/a/kpchgKJBPi4Sm8GZDhhqYH4x5
+[![asciicast](https://asciinema.org/a/JJHxbXDbZifHmNFG1gQbGlyuk.svg)](https://asciinema.org/a/kpchgKJBPi4Sm8GZDhhqYH4x5)
