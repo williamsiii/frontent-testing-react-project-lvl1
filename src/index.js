@@ -148,7 +148,7 @@ const parseForElement = async (element, attr, condition) => {
   arr.forEach(async (item) => {
     const finished = promisify(stream.finished);
     const index = arr.indexOf(item);
-    const writer = fs.createWriteStream(filesArr[index])
+    const writer = fs.createWriteStream(filesArr[index]);
     return axios({
       method: 'get',
       url: origArr[index],
@@ -160,7 +160,7 @@ const parseForElement = async (element, attr, condition) => {
       })
       .catch((err) => {
         console.error(origArr[index], err.code);
-      })
+      });
   });
 };
 
@@ -202,15 +202,13 @@ const main = async (output, url) => {
   //
   await parsePage();
   savePage();
-
-  return params.finalPath
 };
 
 export const PageLoader = {
   main,
   defaultUrl,
   INIT_STATE,
-  params
+  params,
 };
 
 export default main;

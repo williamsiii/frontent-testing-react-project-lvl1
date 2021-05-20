@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import commander from 'commander';
-import Util from '../src/index.js';
+import Util, { PageLoader } from '../src/index.js';
 
 const { program } = commander;
 
@@ -12,7 +12,7 @@ const app = () => {
     .option('-o, --output [dir]', 'output dir')
     .option('-u, --url <url>', 'Set page address for downloading')
     .action((options) => Util(options.output, options.url)
-      .then((filepath) => console.log(`Страница сохранена в "${filepath}"`))
+      .then(() => console.log(`Страница сохранена в "${PageLoader.params.finalPath}"`))
       .catch((error) => {
         console.error(error.message);
 
@@ -20,7 +20,6 @@ const app = () => {
       }));
 
   program.parse(process.argv);
-}
+};
 
 export default app;
-

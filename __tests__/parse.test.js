@@ -1,42 +1,7 @@
 import fs from 'fs';
 import nock from 'nock';
 import { PageLoader } from '../src/index';
-
-const fixture1 = `<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="utf-8">
-    <title>Курсы по программированию Хекслет</title>
-  </head>
-  <body>
-    <img src="/assets/professions/nodejs.png" alt="Иконка профессии Node.js-программист" />
-    <img src="https://ru.hexlet.io/courses/assets/professions/nodejs1.png" alt="Иконка профессии Node.js-программист" />
-    <img src="https://cdn2.hexlet.io/assets/logos/funbox-3903337b3475d9698c0e77b5ad46720d8c0e4b94d17f6aa7d7fa19b40e39a356.svg" alt="Иконка профессии Node.js-программист" />
-    <img src="https://yandex.ru/courses/assets/professions/sun.png" alt="Иконка профессии Node.js-программист" />
-    <h3>
-      <a href="/professions/nodejs">Node.js-программист</a>
-    </h3>
-  </body>
-</html>`;
-
-const fixture2 = `<!DOCTYPE html>
-<html lang="ru">
-  <head>
-    <meta charset="utf-8">
-    <title>Курсы по программированию Хекслет</title>
-    <link rel="stylesheet" media="all" href="https://cdn2.hexlet.io/assets/menu.css">
-    <link rel="stylesheet" media="all" href="/assets/application.css" />
-    <link href="/courses" rel="canonical">
-  </head>
-  <body>
-    <img src="/assets/professions/nodejs.png" alt="Иконка профессии Node.js-программист" />
-    <h3>
-      <a href="/professions/nodejs">Node.js-программист</a>
-    </h3>
-    <script src="https://js.stripe.com/v3/"></script>
-    <script src="https://ru.hexlet.io/packs/js/runtime.js"></script>
-  </body>
-</html>`;
+import fixture from '../__fixtures__';
 
 describe('page-loader, parse response', () => {
   let scope;
@@ -54,7 +19,7 @@ describe('page-loader, parse response', () => {
     process.argv = process.argv.slice(0, 2);
     scope = nock('https://hexlet.io')
       .get('/')
-      .reply(200, fixture2);
+      .reply(200, fixture);
     scope1 = nock('https://hexlet.io')
       .get(/\/.{1,}/)
       .reply(200, 'some bytes');
