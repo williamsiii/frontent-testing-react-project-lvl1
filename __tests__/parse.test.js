@@ -110,7 +110,6 @@ describe('page-loader, parse response', () => {
 
   test('saved files', async () => {
     PageLoader.params.response = fixture2;
-    await PageLoader.parsePage();
     await PageLoader.savePage();
     PageLoader.params.resourcesFileNames.forEach((file) => {
       expect(fs.existsSync(file)).toBe(true);

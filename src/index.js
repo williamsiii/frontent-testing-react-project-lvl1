@@ -178,7 +178,7 @@ const parseForElement = async (element, attr, condition) => {
       });
       resp.data.pipe(fs.createWriteStream(filesArr[index]));
     } catch (err) {
-      console.error(origArr[index], `Status${err.response?.status}`);
+      console.error(origArr[index], err.code);
     }
   });
 };
