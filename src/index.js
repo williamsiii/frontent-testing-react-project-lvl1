@@ -2,6 +2,7 @@ import * as stream from 'stream';
 import { promisify } from 'util';
 import axios from 'axios';
 import fs from 'fs';
+import { writeFile } from 'fs/promises';
 import cheerio from 'cheerio';
 import 'axios-debug-log';
 
@@ -182,7 +183,7 @@ const savePage = async () => {
   }
   params.finalPath = `${params.output}${params.fileName}.html`;
   try {
-    fs.writeFileSync(params.finalPath, params.response);
+    await writeFile(params.finalPath, params.response);
   } catch (err) {
     console.error(err);
     process.exit();

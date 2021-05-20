@@ -1,6 +1,7 @@
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/williamsiii/frontent-testing-react-project-lvl1/workflows/hexlet-check/badge.svg)](https://github.com/williamsiii/frontent-testing-react-project-lvl1/actions)
 
+[![codecov](https://codecov.io/gh/williamsiii/frontent-testing-react-project-lvl1/branch/main/graph/badge.svg?token=SHH8D2092S)](https://codecov.io/gh/williamsiii/frontent-testing-react-project-lvl1)
 
 Usage: index [options]
 
@@ -26,6 +27,3 @@ asciinemas:
 
 пример с ошибкой (нет сети, нет доступа к папке):
 [![asciicast](https://asciinema.org/a/JJHxbXDbZifHmNFG1gQbGlyuk.svg)](https://asciinema.org/a/kpchgKJBPi4Sm8GZDhhqYH4x5)
-
-
-[![codecov](https://codecov.io/gh/williamsiii/frontent-testing-react-project-lvl1/branch/main/graph/badge.svg?token=SHH8D2092S)](https://codecov.io/gh/williamsiii/frontent-testing-react-project-lvl1)
