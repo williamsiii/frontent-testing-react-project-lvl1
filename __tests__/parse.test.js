@@ -39,6 +39,7 @@ const fixture2 = `<!DOCTYPE html>
 </html>`;
 
 describe('page-loader, parse response', () => {
+  let scope;
   let scope1;
   let scope2;
   let scope3;
@@ -51,53 +52,22 @@ describe('page-loader, parse response', () => {
     PageLoader.params.resourcesFileNames = [];
     PageLoader.params.originalResources = [];
     process.argv = process.argv.slice(0, 2);
+    scope = nock('https://hexlet.io')
+      .get('/')
+      .reply(200, fixture2);
     scope1 = nock('https://hexlet.io')
-      .get(/.*/)
+      .get(/\/.{1,}/)
       .reply(200, 'some bytes');
     scope2 = nock('https://ru.hexlet.io')
-      .get(/.*/)
+      .get(/\/.{1,}/)
       .reply(200, 'some bytes');
     scope3 = nock('https://cdn2.hexlet.io')
-      .get(/.*/)
+      .get(/\/.{1,}/)
       .reply(200, 'some bytes');
   });
 
-  test('parse img, default', async () => {
-    PageLoader.params.response = fixture1;
-    await PageLoader.parseForElement('img', 'src');
-    expect(PageLoader.params.resources).toEqual(
-      [
-        '/assets/professions/nodejs.png',
-        '/courses/assets/professions/nodejs1.png',
-        '/assets/logos/funbox-3903337b3475d9698c0e77b5ad46720d8c0e4b94d17f6aa7d7fa19b40e39a356.svg',
-      ],
-    );
-  });
-
-  test('parse links, default', async () => {
-    PageLoader.params.response = fixture2;
-    await PageLoader.parseForElement('link', 'href', PageLoader.linkCondition);
-    expect(PageLoader.params.resources).toEqual(
-      [
-        '/assets/menu.css',
-        '/assets/application.css',
-      ],
-    );
-  });
-
-  test('parse scripts, default', async () => {
-    PageLoader.params.response = fixture2;
-    await PageLoader.parseForElement('script', 'src');
-    expect(PageLoader.params.resources).toEqual(
-      [
-        '/packs/js/runtime.js',
-      ],
-    );
-  });
-
-  test('parse all', async () => {
-    PageLoader.params.response = fixture2;
-    await PageLoader.parsePage();
+  test('parse resources, default', async () => {
+    await PageLoader.main(undefined, 'https://hexlet.io/');
     expect(PageLoader.params.resources).toEqual(
       [
         '/assets/professions/nodejs.png',
@@ -109,8 +79,7 @@ describe('page-loader, parse response', () => {
   });
 
   test('saved files', async () => {
-    PageLoader.params.response = fixture2;
-    await PageLoader.savePage();
+    await PageLoader.main();
     PageLoader.params.resourcesFileNames.forEach((file) => {
       expect(fs.existsSync(file)).toBe(true);
     });
@@ -122,6 +91,7 @@ describe('page-loader, parse response', () => {
     PageLoader.params.resourcesFileNames = [];
     PageLoader.params.originalResources = [];
     fs.rm(PageLoader.params.resourcesDir, { recursive: true, force: true }, () => { });
+    scope.done();
     scope1.done();
     scope2.done();
     scope3.done();

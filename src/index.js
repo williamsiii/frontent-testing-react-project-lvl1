@@ -1,6 +1,7 @@
+import * as stream from 'stream';
+import { promisify } from 'util';
 import axios from 'axios';
 import fs from 'fs';
-import { program } from 'commander';
 import cheerio from 'cheerio';
 import 'axios-debug-log';
 
@@ -18,15 +19,6 @@ const INIT_STATE = {
 
 const params = { ...INIT_STATE };
 
-const ERROR_CODES = {
-  BAD_INPUT: 1,
-  NO_DATA: 2,
-  COULD_NOT_FETCH: 3,
-  CANT_PARSE_DOC: 4,
-  CANT_MKDIR: 5,
-  CANT_WRITE: 6,
-};
-
 const linkCondition = ($, el) => $(el).attr('rel') !== 'stylesheet';
 
 const RESOURCES = [
@@ -34,13 +26,6 @@ const RESOURCES = [
   { tag: 'link', attr: 'href', condition: linkCondition },
   { tag: 'script', attr: 'src' },
 ];
-
-const initOptions = () => {
-  program
-    .allowUnknownOption()
-    .option('-o, --output <dirname>', 'Set output directory', INIT_STATE.output)
-    .option('-u, --url <url>', 'Set page address for downloading', defaultUrl);
-};
 
 const composeName = (name, withExtension = false) => {
   let extension = '';
@@ -62,22 +47,14 @@ const composeName = (name, withExtension = false) => {
   return res + extension;
 };
 
-const getOptions = async () => {
-  try {
-    await program.parseAsync();
-    params.url = String(program.opts().url);
-    params.output = String(program.opts().output);
-    if (params.output[params.output.length - 1] !== '/') {
-      params.output += '/';
-    }
-    if (!fs.existsSync(params.output)) {
-      params.output = INIT_STATE.output;
-    }
-    params.fileName = composeName(params.url);
-  } catch (err) {
-    console.error('Не смог обработать входные параметры:', err);
-    process.exit();
+const checkOptions = () => {
+  if (params.output[params.output.length - 1] !== '/') {
+    params.output += '/';
   }
+  if (!fs.existsSync(params.output)) {
+    params.output = INIT_STATE.output;
+  }
+  params.fileName = composeName(params.url);
 };
 
 const fetchPage = async () => {
@@ -169,17 +146,21 @@ const parseForElement = async (element, attr, condition) => {
   params.resourcesFileNames = params.resourcesFileNames.concat(filesArr);
   // save resources
   arr.forEach(async (item) => {
+    const finished = promisify(stream.finished);
     const index = arr.indexOf(item);
-    try {
-      const resp = await axios({
-        method: 'get',
-        url: origArr[index],
-        responseType: 'stream',
-      });
-      resp.data.pipe(fs.createWriteStream(filesArr[index]));
-    } catch (err) {
-      console.error(origArr[index], err.code);
-    }
+    const writer = fs.createWriteStream(filesArr[index])
+    return axios({
+      method: 'get',
+      url: origArr[index],
+      responseType: 'stream',
+    })
+      .then(async (response) => {
+        response.data.pipe(writer);
+        return finished(writer);
+      })
+      .catch((err) => {
+        console.error(origArr[index], err.code);
+      })
   });
 };
 
@@ -199,19 +180,19 @@ const savePage = async () => {
   if (params.output[params.output.length - 1] !== '/') {
     params.output += '/';
   }
-  const file = `${params.output}${params.fileName}.html`;
+  params.finalPath = `${params.output}${params.fileName}.html`;
   try {
-    fs.writeFileSync(file, params.response);
+    fs.writeFileSync(params.finalPath, params.response);
   } catch (err) {
     console.error(err);
     process.exit();
   }
-  console.log(`Файл был сохранён как ${file}`);
 };
 
-const main = async () => {
-  initOptions();
-  getOptions();
+const main = async (output, url) => {
+  params.output = output || INIT_STATE.output;
+  params.url = url || INIT_STATE.url;
+  checkOptions();
   await fetchPage();
   //
   if (!params.response) {
@@ -221,22 +202,15 @@ const main = async () => {
   //
   await parsePage();
   savePage();
+
+  return params.finalPath
 };
 
 export const PageLoader = {
   main,
-  params,
   defaultUrl,
   INIT_STATE,
-  ERROR_CODES,
-  getOptions,
-  initOptions,
-  composeName,
-  savePage,
-  fetchPage,
-  parsePage,
-  parseForElement,
-  linkCondition,
+  params
 };
 
 export default main;
