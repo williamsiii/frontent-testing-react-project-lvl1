@@ -1,7 +1,9 @@
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/williamsiii/frontent-testing-react-project-lvl1/workflows/hexlet-check/badge.svg)](https://github.com/williamsiii/frontent-testing-react-project-lvl1/actions)
 
-[![codecov](https://codecov.io/gh/williamsiii/frontent-testing-react-project-lvl1/branch/main/graph/badge.svg?token=SHH8D2092S)](https://codecov.io/gh/williamsiii/frontent-testing-react-project-lvl1)
+[![Maintainability](https://api.codeclimate.com/v1/badges/75720a561f7901f3d18f/maintainability)](https://codeclimate.com/github/williamsiii/frontent-testing-react-project-lvl1/maintainability)
+
+[![Test Coverage](https://api.codeclimate.com/v1/badges/75720a561f7901f3d18f/test_coverage)](https://codeclimate.com/github/williamsiii/frontent-testing-react-project-lvl1/test_coverage)
 
 Usage: index [options]
 
