@@ -1,7 +1,51 @@
-import fs from 'fs';
 import nock from 'nock';
+import os from 'os';
+import fs from 'fs';
+import 'axios-debug-log';
 import { PageLoader } from '../src/index';
 import fixture from '../__fixtures__';
+
+describe('page-loader, setup', () => {
+  test('download folder, default', async () => {
+    await PageLoader.main();
+    expect(PageLoader.params.output).toEqual(PageLoader.INIT_STATE.output);
+  });
+
+  test('download folder, home directory', async () => {
+    await PageLoader.main(os.homedir());
+    expect(PageLoader.params.output).toEqual(`${os.homedir()}/`);
+  });
+
+  test('download folder, wrong folder', async () => {
+    await PageLoader.main('/var/spoon/bar/tron/mud/jizz');
+    expect(PageLoader.params.output).toEqual(PageLoader.INIT_STATE.output);
+  });
+
+  test('url, default', async () => {
+    await PageLoader.main();
+    expect(PageLoader.params.url).toEqual(PageLoader.defaultUrl);
+  });
+
+  test('url, argument', async () => {
+    await PageLoader.main(undefined, 'https://yandex.ru');
+    expect(PageLoader.params.url).toEqual('https://yandex.ru');
+  });
+});
+
+describe('page-loader, fetch', () => {
+  beforeAll(() => {
+    process.argv = process.argv.slice(0, 2);
+  });
+
+  test('fetch page', async () => {
+    const scope = nock('https://example.com')
+      .get('/')
+      .reply(200, 'some html');
+    await PageLoader.main(undefined, 'https://example.com/');
+    expect(PageLoader.params.response).toEqual('some html');
+    scope.done();
+  });
+});
 
 describe('page-loader, parse response', () => {
   let scope;
@@ -60,5 +104,17 @@ describe('page-loader, parse response', () => {
     scope1.done();
     scope2.done();
     scope3.done();
+  });
+});
+
+describe('page-loader, failures', () => {
+  test('fetch page failed', async () => {
+    const scope = nock('https://example.com')
+      .get('/')
+      .reply(400);
+    const mockExit = jest.spyOn(process, 'exit').mockImplementation(() => { });
+    await PageLoader.main(undefined, 'https://example.com');
+    expect(mockExit).toHaveBeenCalled();
+    scope.done();
   });
 });

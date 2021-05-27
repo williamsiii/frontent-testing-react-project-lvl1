@@ -42,6 +42,10 @@ const composeName = (name, withExtension = false) => {
   } else {
     res = name;
   }
+  if (Array.isArray(res)) {
+    res = res[0];
+  }
+  console.log({ res })
   res = res
     .replace(/(http|https):\/\/(www\.)?/g, '')
     .replace(/[\W_]/g, '-');
