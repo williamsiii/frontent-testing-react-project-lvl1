@@ -1,9 +1,21 @@
 import nock from 'nock';
 import os from 'os';
 import fs from 'fs';
+import { readFile } from 'fs/promises';
 import 'axios-debug-log';
 import { PageLoader } from '../src/index';
-import fixture from '../__fixtures__';
+
+const readFileAsynced = async (filename) => {
+  try {
+    const promise = readFile(filename, 'utf8');
+
+    await promise;
+
+    return promise;
+  } catch (err) {
+    console.error(err);
+  }
+}
 
 describe('page-loader, setup', () => {
   test('download folder, default', async () => {
@@ -33,18 +45,21 @@ describe('page-loader, setup', () => {
 });
 
 describe('page-loader, fetch', () => {
-  beforeAll(() => {
+  let fixture = null;
+  beforeAll(async () => {
     process.argv = process.argv.slice(0, 2);
+    fixture = await readFileAsynced('./__fixtures__/index.html')
   });
 
   test('fetch page', async () => {
     const scope = nock('https://example.com')
       .get('/')
-      .reply(200, 'some html');
+      .reply(200, fixture);
     await PageLoader.main(undefined, 'https://example.com/');
-    expect(PageLoader.params.response).toEqual('some html');
+    expect(PageLoader.params.response).toEqual(fixture);
     scope.done();
   });
+
 });
 
 describe('page-loader, parse response', () => {
@@ -52,6 +67,10 @@ describe('page-loader, parse response', () => {
   let scope1;
   let scope2;
   let scope3;
+  let fixture = null;
+  beforeAll(async () => {
+    fixture = await readFileAsynced('./__fixtures__/index.html')
+  })
   beforeEach(() => {
     PageLoader.params.response = null;
     PageLoader.params.url = 'https://hexlet.io';
@@ -87,10 +106,11 @@ describe('page-loader, parse response', () => {
     );
   });
 
-  test('saved files', async () => {
+  test('saved files not empty', async () => {
     await PageLoader.main();
-    PageLoader.params.resourcesFileNames.forEach((file) => {
-      expect(fs.existsSync(file)).toBe(true);
+    PageLoader.params.resourcesFileNames.forEach(async (file) => {
+      ff = await readFileAsynced(file)
+      expect(ff && ff.length).toBeTruthy();
     });
   });
 

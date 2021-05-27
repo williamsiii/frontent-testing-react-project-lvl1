@@ -43,9 +43,8 @@ const composeName = (name, withExtension = false) => {
     res = name;
   }
   if (Array.isArray(res)) {
-    res = res[0];
+    [res] = res;
   }
-  console.log({ res })
   res = res
     .replace(/(http|https):\/\/(www\.)?/g, '')
     .replace(/[\W_]/g, '-');
@@ -134,7 +133,7 @@ const parseForElement = async (element, attr, condition) => {
         .replace(/^.*\/\/\//, '/') // теперь убираю все верхние домены, если есть спецпоследовательность
         .replace(/\/{2,}/g, '/'); // заменяю все последовательности '/.../' на одинарный '/'
 
-      if (res.match(/^\//)) {
+      if (res.match(/^\//) && res.length < 240) {
         const targetFileName = composeName(res, true);
         filesArr.push(`${params.resourcesDir}/${targetFileName}`);
         arr.push(res);
