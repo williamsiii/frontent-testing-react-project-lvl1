@@ -1,21 +1,19 @@
 import nock from 'nock';
 import os from 'os';
-import fs from 'fs';
-import { readFile } from 'fs/promises';
+import { readFile, rm } from 'fs/promises';
 import 'axios-debug-log';
 import { PageLoader } from '../src/index';
 
 const readFileAsynced = async (filename) => {
+  let res = null;
   try {
     const promise = readFile(filename, 'utf8');
-
-    await promise;
-
-    return promise;
+    res = await promise;
   } catch (err) {
     console.error(err);
   }
-}
+  return res;
+};
 
 describe('page-loader, setup', () => {
   test('download folder, default', async () => {
@@ -48,7 +46,7 @@ describe('page-loader, fetch', () => {
   let fixture = null;
   beforeAll(async () => {
     process.argv = process.argv.slice(0, 2);
-    fixture = await readFileAsynced('./__fixtures__/index.html')
+    fixture = await readFileAsynced('./__fixtures__/index.html');
   });
 
   test('fetch page', async () => {
@@ -59,7 +57,6 @@ describe('page-loader, fetch', () => {
     expect(PageLoader.params.response).toEqual(fixture);
     scope.done();
   });
-
 });
 
 describe('page-loader, parse response', () => {
@@ -69,8 +66,9 @@ describe('page-loader, parse response', () => {
   let scope3;
   let fixture = null;
   beforeAll(async () => {
-    fixture = await readFileAsynced('./__fixtures__/index.html')
-  })
+    fixture = await readFileAsynced('./__fixtures__/index.html');
+  });
+
   beforeEach(() => {
     PageLoader.params.response = null;
     PageLoader.params.url = 'https://hexlet.io';
@@ -109,17 +107,17 @@ describe('page-loader, parse response', () => {
   test('saved files not empty', async () => {
     await PageLoader.main();
     PageLoader.params.resourcesFileNames.forEach(async (file) => {
-      ff = await readFileAsynced(file)
+      const ff = await readFileAsynced(file);
       expect(ff && ff.length).toBeTruthy();
     });
   });
 
-  afterAll(() => {
+  afterAll(async () => {
     PageLoader.params.response = null;
     PageLoader.params.resources = [];
     PageLoader.params.resourcesFileNames = [];
     PageLoader.params.originalResources = [];
-    fs.rm(PageLoader.params.resourcesDir, { recursive: true, force: true }, () => { });
+    await rm(PageLoader.params.resourcesDir, { recursive: true, force: true }, () => { });
     scope.done();
     scope1.done();
     scope2.done();

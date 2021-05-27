@@ -1,8 +1,8 @@
 import * as stream from 'stream';
 import { promisify } from 'util';
 import axios from 'axios';
-import fs from 'fs';
-import { writeFile } from 'fs/promises';
+import fs, { constants } from 'fs';
+import { writeFile, access, mkdir } from 'fs/promises';
 import cheerio from 'cheerio';
 import 'axios-debug-log';
 
@@ -28,6 +28,17 @@ const RESOURCES = [
   { tag: 'script', attr: 'src' },
 ];
 
+const accessPath = async (path) => {
+  let res = false;
+  try {
+    await access(path, constants.W_OK);
+    res = true;
+  } catch (err) {
+    console.error(err);
+  }
+  return res;
+};
+
 const composeName = (name, withExtension = false) => {
   let extension = '';
   let res;
@@ -51,11 +62,12 @@ const composeName = (name, withExtension = false) => {
   return res + extension;
 };
 
-const checkOptions = () => {
+const checkOptions = async () => {
   if (params.output[params.output.length - 1] !== '/') {
     params.output += '/';
   }
-  if (!fs.existsSync(params.output)) {
+  const isExist = await accessPath(params.output);
+  if (!isExist) {
     params.output = INIT_STATE.output;
   }
   params.fileName = composeName(params.url);
@@ -93,15 +105,15 @@ const changeSource = () => {
   params.response = $.html();
 };
 
-const checkSaveDirectory = () => {
+const checkSaveDirectory = async () => {
   // create dir if not exists
   try {
     params.resourcesDir = `${params.output}${params.fileName}_files`;
-    if (!fs.existsSync(params.resourcesDir)) {
-      fs.mkdir(params.resourcesDir, (err) => {
+    const exists = await accessPath(params.resourcesDir);
+    if (!exists) {
+      await mkdir(params.resourcesDir, (err) => {
         if (err) {
-          console.error('Не получилось создать директорию', err);
-          process.exit();
+          console.error('Не получилось создать директорию!', err);
         }
       });
     }
