@@ -4,16 +4,6 @@ import { readFile, rm } from 'fs/promises';
 import 'axios-debug-log';
 import { PageLoader } from '../src/index';
 
-const readFileAsynced = async (filename) => {
-  let res = null;
-  try {
-    const promise = readFile(filename, 'utf8');
-    res = await promise;
-  } catch (err) {
-    console.error(err);
-  }
-  return res;
-};
 
 describe('page-loader, setup', () => {
   test('download folder, default', async () => {
@@ -46,7 +36,7 @@ describe('page-loader, fetch', () => {
   let fixture = null;
   beforeAll(async () => {
     process.argv = process.argv.slice(0, 2);
-    fixture = await readFileAsynced('./__fixtures__/index.html');
+    fixture = await readFile('./__fixtures__/index.html', 'utf8');
   });
 
   test('fetch page', async () => {
@@ -66,7 +56,7 @@ describe('page-loader, parse response', () => {
   let scope3;
   let fixture = null;
   beforeAll(async () => {
-    fixture = await readFileAsynced('./__fixtures__/index.html');
+    fixture = await readFile('./__fixtures__/index.html', 'utf8');
   });
 
   beforeEach(() => {
@@ -107,7 +97,7 @@ describe('page-loader, parse response', () => {
   test('saved files not empty', async () => {
     await PageLoader.main();
     PageLoader.params.resourcesFileNames.forEach(async (file) => {
-      const ff = await readFileAsynced(file);
+      const ff = await readFile(file, 'utf8');
       expect(ff && ff.length).toBeTruthy();
     });
   });
