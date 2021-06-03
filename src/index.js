@@ -1,5 +1,6 @@
 import axios from 'axios';
 import path from 'path';
+import os from 'os';
 import { createWriteStream, promises as fs } from 'fs';
 import cheerio from 'cheerio';
 import { keys } from 'lodash';
@@ -96,7 +97,10 @@ const saveResources = (url, resourceOutputPath, linksArr) => {
     });
 };
 
-const main = (baseUrl, outputPath = process.cwd()) => {
+const main = async (baseUrl, outputPath) => {
+  if (!outputPath) {
+    outputPath = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'))
+  }
   log(`Load page ${baseUrl} to ${outputPath}`);
   return axios.get(baseUrl).then((res) => {
     const htmlFileName = `${composeName(baseUrl)}.html`;
