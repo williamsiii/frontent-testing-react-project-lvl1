@@ -8,7 +8,7 @@ import 'axios-debug-log';
 
 const defaultUrl = 'http://www.tsjdom18.ru';
 const INIT_STATE = {
-  output: '/Users/a.nosov/hexlet/test_download/',
+  output: './downloads/',
   url: defaultUrl,
   fileName: 'default.html',
   response: null,

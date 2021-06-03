@@ -6,7 +6,7 @@ import main from '../src/index';
 describe('page-loader, parse response', () => {
   let scope;
   let fixture = null;
-  const testDir = `${process.cwd()}/hexlet-io-_files`;
+  const testDir = `./downloads/hexlet-io-_files`;
   beforeAll(async () => {
     fixture = await readFile('./__fixtures__/index.html', 'utf8');
   });
@@ -20,7 +20,7 @@ describe('page-loader, parse response', () => {
   });
 
   test('parse resources, default', async () => {
-    await main(process.cwd(), 'https://hexlet.io/');
+    await main('./downloads/', 'https://hexlet.io/');
     const res = await readdir(testDir);
     expect(res).toMatchObject(expect.arrayContaining([
       '-assets-professions-nodejs.png',
@@ -31,7 +31,7 @@ describe('page-loader, parse response', () => {
   });
 
   test('file contents', async () => {
-    await main(process.cwd(), 'https://hexlet.io/');
+    await main('./downloads/', 'https://hexlet.io/');
     const res = await readdir(testDir);
     res.forEach(async (file) => {
       const path = `${testDir}/${file}`;
