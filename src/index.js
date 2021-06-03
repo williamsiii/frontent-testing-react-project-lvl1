@@ -3,7 +3,10 @@ import path from 'path';
 import { createWriteStream, promises as fs } from 'fs';
 import cheerio from 'cheerio';
 import { keys } from 'lodash';
+import debug from 'debug';
 
+
+const log = debug('page-loader');
 
 const RESOURCES = {
   link: 'href',
@@ -39,6 +42,7 @@ const parseResourceLinks = (page, dir, baseUrl) => {
   const { host, origin } = new URL(baseUrl);
   const linksArr = [];
   const $ = cheerio.load(page);
+
   keys(RESOURCES).forEach((tag) => {
     $(tag).each((index, element) => {
       const uri = $(element).attr(RESOURCES[tag]);
@@ -53,7 +57,7 @@ const parseResourceLinks = (page, dir, baseUrl) => {
       );
     });
   });
-  return { result: $.html(), linksArr };
+  return { result: $.html({ decodeEntities: false }), linksArr };
 };
 
 const loadResource = (url, resourceOutputPath) => {
@@ -64,9 +68,11 @@ const loadResource = (url, resourceOutputPath) => {
     responseType: 'stream',
   })
     .then(({ data }) => {
+      log(`Fetch resource ${url} to ${resultFilePath}`);
       data.pipe(createWriteStream(resultFilePath));
     })
     .catch((error) => {
+      log(`Fetch resource ${url} failed ${error.message}`);
       throw error;
     });
 };
@@ -77,6 +83,7 @@ const saveResources = (url, resourceOutputPath, linksArr) => {
   return fs
     .mkdir(resultOutput)
     .then(() => {
+      log(`Create folder ${resultOutput} for resources`);
       return linksArr.map((link) => {
         const resourceUrl = new URL(link, url);
         return loadResource(resourceUrl.toString(), resultOutput);
@@ -84,24 +91,26 @@ const saveResources = (url, resourceOutputPath, linksArr) => {
     })
     .then((tasks) => Promise.all(tasks))
     .catch((error) => {
+      log(`Create folder ${resultOutput} failed ${error.message}`);
       throw error;
     });
 };
 
-const main = (baseUrl, outputPath) => {
+const main = (baseUrl, outputPath = process.cwd()) => {
+  log(`Load page ${baseUrl} to ${outputPath}`);
   return axios.get(baseUrl).then((res) => {
     const htmlFileName = `${composeName(baseUrl)}.html`;
     const resultFilePath = path.join(outputPath, htmlFileName);
     const page = res.data;
     const sourceDir = composeLink(baseUrl, 'directory');
     const { result, linksArr } = parseResourceLinks(page, sourceDir, baseUrl);
-
     return fs
-      .writeFile(resultFilePath, Buffer.from(result))
+      .writeFile(resultFilePath, result)
       .then(() => {
         saveResources(baseUrl, outputPath, linksArr)
       })
       .catch((error) => {
+        log(`Writing to ${resultFilePath} error, ${error.message}`);
         throw error;
       });
   });

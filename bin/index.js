@@ -9,7 +9,7 @@ const app = () => {
     .version('1.0.0')
     .description('Сохранение страницы и ресурсов')
     .allowUnknownOption()
-    .option('-o, --output [dir]', 'output dir')
+    .option('-o, --output [dir]', 'output dir', process.cwd())
     .option('-u, --url <url>', 'Set page address for downloading')
     .action((options) => Util(options.output, options.url)
       .then(() => console.log(`Страница сохранена в "${PageLoader.params.finalPath}"`))
