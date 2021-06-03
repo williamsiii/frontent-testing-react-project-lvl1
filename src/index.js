@@ -90,14 +90,14 @@ const saveResources = (url, resourceOutputPath, linksArr) => {
 
 const main = (baseUrl, outputPath) => {
   return axios.get(baseUrl).then((res) => {
-    const htmlFileName = `${composeName(baseUrl)}.html`
+    const htmlFileName = `${composeName(baseUrl)}.html`;
     const resultFilePath = path.join(outputPath, htmlFileName);
     const page = res.data;
     const sourceDir = composeLink(baseUrl, 'directory');
     const { result, linksArr } = parseResourceLinks(page, sourceDir, baseUrl);
 
     return fs
-      .writeFile(resultFilePath, result, { encoding: 'utf8', flag: "w" })
+      .writeFile(resultFilePath, Buffer.from(result))
       .then(() => {
         saveResources(baseUrl, outputPath, linksArr)
       })
