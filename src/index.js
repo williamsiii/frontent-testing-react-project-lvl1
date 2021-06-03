@@ -79,7 +79,6 @@ const fetchPage = async () => {
     resp = await axios.get(params.url);
   } catch (err) {
     console.error('Не получилось скачать страницу:', err.code);
-    process.exit();
   }
 
   if (resp && resp.status === 200) {
@@ -87,7 +86,6 @@ const fetchPage = async () => {
   } else {
     params.response = null;
     console.error('Не получилось скачать страницу');
-    process.exit();
   }
 };
 
@@ -119,7 +117,6 @@ const checkSaveDirectory = async () => {
     }
   } catch (err) {
     console.error('Не получилось создать директорию', err);
-    process.exit();
   }
 };
 
@@ -188,7 +185,6 @@ const parsePage = async () => {
     changeSource();
   } catch (err) {
     console.error('Не получилось распарсить документ', err);
-    process.exit();
   }
 };
 
@@ -201,7 +197,6 @@ const savePage = async () => {
     await writeFile(params.finalPath, params.response);
   } catch (err) {
     console.error(err);
-    process.exit();
   }
 };
 
