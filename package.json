@@ -49,6 +49,7 @@
     "axios-debug-log": "^0.8.2",
     "cheerio": "^0.22.0",
     "commander": "^7.2.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "lodash.keys": "^4.2.0"
   }
 }

@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 import commander from 'commander';
-import Util, { PageLoader } from '../src/index.js';
+import main from '../src/index.js';
 
 const { program } = commander;
 
-const app = () => {
+const app = async () => {
+  const defaultPath = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'))
   program
     .version('1.0.0')
     .description('Сохранение страницы и ресурсов')
     .allowUnknownOption()
-    .option('-o, --output [dir]', 'output dir', process.cwd())
+    .option('-o, --output [dir]', 'output dir', defaultPath)
     .option('-u, --url <url>', 'Set page address for downloading')
-    .action((options) => Util(options.output, options.url)
+    .action(async (options) => await main(options.output, options.url)
       .then(() => console.log(`Страница сохранена в "${PageLoader.params.finalPath}"`))
       .catch((error) => {
         console.error(error.message);
@@ -22,4 +23,5 @@ const app = () => {
   program.parse(process.argv);
 };
 
-export default app;
+app()
+// export default app;

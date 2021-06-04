@@ -1,9 +1,8 @@
 import axios from 'axios';
 import path from 'path';
-import os from 'os';
 import { createWriteStream, promises as fs } from 'fs';
 import cheerio from 'cheerio';
-import { keys } from 'lodash';
+import keys from 'lodash.keys';
 import debug from 'debug';
 
 
@@ -61,7 +60,7 @@ const parseResourceLinks = (page, dir, baseUrl) => {
   return { result: $.html({ decodeEntities: false }), linksArr };
 };
 
-const loadResource = (url, resourceOutputPath) => {
+const loadResource = async (url, resourceOutputPath) => {
   const resultFilePath = path.join(resourceOutputPath, composeLink(url));
   return axios({
     method: 'get',
@@ -78,7 +77,7 @@ const loadResource = (url, resourceOutputPath) => {
     });
 };
 
-const saveResources = (url, resourceOutputPath, linksArr) => {
+const saveResources = async (url, resourceOutputPath, linksArr) => {
   const resultDirName = composeLink(url, 'directory');
   const resultOutput = path.join(resourceOutputPath, resultDirName);
   return fs
@@ -97,10 +96,7 @@ const saveResources = (url, resourceOutputPath, linksArr) => {
     });
 };
 
-const main = async (baseUrl, outputPath) => {
-  if (!outputPath) {
-    outputPath = await fs.mkdtemp(path.join(os.tmpdir(), 'page-loader-'))
-  }
+const main = async (baseUrl, outputPath = process.cwd()) => {
   log(`Load page ${baseUrl} to ${outputPath}`);
   return axios.get(baseUrl).then((res) => {
     const htmlFileName = `${composeName(baseUrl)}.html`;
@@ -108,10 +104,15 @@ const main = async (baseUrl, outputPath) => {
     const page = res.data;
     const sourceDir = composeLink(baseUrl, 'directory');
     const { result, linksArr } = parseResourceLinks(page, sourceDir, baseUrl);
+
+    console.log({ resultFilePath })
     return fs
       .writeFile(resultFilePath, result)
       .then(() => {
-        saveResources(baseUrl, outputPath, linksArr)
+        return saveResources(baseUrl, outputPath, linksArr)
+      })
+      .then(() => {
+        return fs.readdir(outputPath)
       })
       .catch((error) => {
         log(`Writing to ${resultFilePath} error, ${error.message}`);
