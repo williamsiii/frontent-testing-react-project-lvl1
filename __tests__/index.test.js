@@ -22,7 +22,7 @@ describe('page-loader, parse response', () => {
   });
 
   test('fetch resources', async () => {
-    await main('https://hexlet.io/', pathToTempDir);
+    await main(pathToTempDir, 'https://hexlet.io/');
 
     const res = await readFile(`${pathToTempDir}/hexlet-io-.html`);
     expect(res && res.length).toBeTruthy();
@@ -60,7 +60,7 @@ describe('page-loader, failures', () => {
       .get('/')
       .reply(400);
     await expect(
-      main('https://example.com', pathToTempDir),
+      main(pathToTempDir, 'https://example.com'),
     ).rejects.toThrow('Request failed with status code 400');
     scope.done();
   });
