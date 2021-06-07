@@ -5,7 +5,6 @@ import cheerio from 'cheerio';
 import keys from 'lodash.keys';
 import debug from 'debug';
 
-
 const log = debug('page-loader');
 
 const RESOURCES = {
@@ -96,27 +95,29 @@ const saveResources = async (url, resourceOutputPath, linksArr) => {
     });
 };
 
-const main = async (outputPath = process.cwd(), baseUrl) => {
-  log(`Load page ${baseUrl} to ${outputPath}`);
-  return axios.get(baseUrl).then((res) => {
-    const htmlFileName = `${composeName(baseUrl)}.html`;
-    const resultFilePath = path.join(outputPath, htmlFileName);
-    const page = res.data;
-    const sourceDir = composeLink(baseUrl, 'directory');
-    const { result, linksArr } = parseResourceLinks(page, sourceDir, baseUrl);
-    return fs
-      .writeFile(resultFilePath, result)
-      .then(() => {
-        return saveResources(baseUrl, outputPath, linksArr)
-      })
-      .then(() => {
-        return fs.readdir(outputPath)
-      })
-      .catch((error) => {
-        log(`Writing to ${resultFilePath} error, ${error.message}`);
-        throw error;
-      });
-  });
+const main = async (baseUrl, outputPath = process.cwd()) => {
+  let promise;
+  try {
+    log(`Load page ${baseUrl} to ${outputPath}`);
+    promise = axios.get(baseUrl).then((res) => {
+      const htmlFileName = `${composeName(baseUrl)}.html`;
+      const resultFilePath = path.join(outputPath, htmlFileName);
+      const page = res.data;
+      const sourceDir = composeLink(baseUrl, 'directory');
+      const { result, linksArr } = parseResourceLinks(page, sourceDir, baseUrl);
+      return fs
+        .writeFile(resultFilePath, result)
+        .then(() => saveResources(baseUrl, outputPath, linksArr))
+        .then(() => fs.readdir(outputPath))
+        .catch((error) => {
+          log(`Writing to ${resultFilePath} error, ${error.message}`);
+          throw error;
+        });
+    });
+  } catch (err) {
+    console.error({ err });
+  }
+  return promise;
 };
 
 export default main;

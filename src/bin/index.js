@@ -1,4 +1,3 @@
-#!/usr/bin/env node
-import PageLoader from '../src/commander';
+import PageLoader from '../commander.js';
 
 PageLoader();

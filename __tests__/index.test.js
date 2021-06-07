@@ -13,7 +13,8 @@ describe('page-loader, parse response', () => {
 
   beforeAll(async () => {
     nock.disableNetConnect();
-    fixture = await readFile('./__fixtures__/index.html', 'utf8');
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'index.html');
+    fixture = await readFile(fixturePath, 'utf8');
     pathToTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'test-'));
     scope = nock(/hexlet/)
       .persist()
@@ -22,8 +23,7 @@ describe('page-loader, parse response', () => {
   });
 
   test('fetch resources', async () => {
-    await main(pathToTempDir, 'https://hexlet.io/');
-
+    await main('https://hexlet.io/', pathToTempDir);
     const res = await readFile(`${pathToTempDir}/hexlet-io-.html`);
     expect(res && res.length).toBeTruthy();
   });
@@ -37,8 +37,8 @@ describe('page-loader, parse response', () => {
       'hexlet-io-assets-application.css',
     ]));
     resResources.forEach(async (file) => {
-      const path = `${pathToTempDir}/hexlet-io-_files/${file}`;
-      const ff = await readFile(path, 'utf8');
+      const resPath = `${pathToTempDir}/hexlet-io-_files/${file}`;
+      const ff = await readFile(resPath, 'utf8');
       expect(ff && ff.length).toBeTruthy();
     });
   });
@@ -54,13 +54,13 @@ describe('page-loader, failures', () => {
   beforeAll(async () => {
     nock.disableNetConnect();
     pathToTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'test-fail-'));
-  })
+  });
   test('fetch page failed', async () => {
     const scope = nock('https://example.com')
       .get('/')
       .reply(400);
     await expect(
-      main(pathToTempDir, 'https://example.com'),
+      main('https://example.com', pathToTempDir),
     ).rejects.toThrow('Request failed with status code 400');
     scope.done();
   });
