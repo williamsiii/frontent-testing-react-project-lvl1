@@ -24,13 +24,13 @@ jobs:
           CI: true
       - name: Code Climate Coverage Action
         uses: paambaati/codeclimate-action@v2.7.4
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+        # env:
+        #   CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         with:
           coverageCommand: make test-coverage
           debug: true
       - uses: codecov/codecov-action@v1
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: aab0b1da-5c78-45d3-afa1-74b342bd143e
           fail_ci_if_error: true
           verbose: true
