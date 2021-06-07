@@ -104,8 +104,6 @@ const main = async (baseUrl, outputPath = process.cwd()) => {
     const page = res.data;
     const sourceDir = composeLink(baseUrl, 'directory');
     const { result, linksArr } = parseResourceLinks(page, sourceDir, baseUrl);
-
-    console.log({ resultFilePath })
     return fs
       .writeFile(resultFilePath, result)
       .then(() => {
